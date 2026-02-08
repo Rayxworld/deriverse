@@ -113,7 +113,8 @@ const Dashboard: React.FC = () => {
 
   const sharePerformance = () => {
     if (!walletAddress) return;
-    const shareUrl = `http://localhost:3001/api/share/${walletAddress}?winRate=${stats.winRate.toFixed(1)}&totalPnL=${stats.totalPnL.toFixed(2)}&trades=${trades.length}`;
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+    const shareUrl = `${backendUrl}/api/share/${walletAddress}?winRate=${stats.winRate.toFixed(1)}&totalPnL=${stats.totalPnL.toFixed(2)}&trades=${trades.length}`;
     window.open(shareUrl, '_blank');
   };
 

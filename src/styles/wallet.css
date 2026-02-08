@@ -1,0 +1,32 @@
+/* Solana Wallet Adapter UI Styles */
+.wallet-adapter-button {
+    background-color: var(--brand-primary);
+    color: var(--bg-primary);
+    font-size: 14px;
+    font-weight: 600;
+    height: 48px;
+    padding: 0 24px;
+    border-radius: 12px;
+}
+.wallet-adapter-button-trigger {
+    background: var(--brand-gradient);
+}
+.wallet-adapter-button:not([disabled]):hover {
+    background-color: var(--brand-secondary);
+}
+.wallet-adapter-modal-wrapper {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+}
+.wallet-adapter-modal-title {
+    color: var(--text-primary);
+}
+.wallet-adapter-modal-list {
+    margin: 0 0 12px;
+}
+.wallet-adapter-modal-list .wallet-adapter-button {
+    font-weight: 400;
+    font-size: 16px;
+}

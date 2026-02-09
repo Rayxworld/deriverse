@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import { createCanvas } from 'canvas';
+import { createCanvas, loadImage } from 'canvas';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 3001;
 // Endpoint to generate a performance card image
 app.get('/api/share/:wallet', async (req: Request, res: Response) => {
   const { wallet } = req.params;
-  const { winRate, totalPnL, trades } = req.query;
+  const { winRate, totalPnL, trades, avatar } = req.query;
 
   try {
     const width = 1200;
@@ -29,21 +29,46 @@ app.get('/api/share/:wallet', async (req: Request, res: Response) => {
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, height);
 
-    // Accent Circles
+    // Profile Picture Circle (Top Right)
+    const avatarX = 1000;
+    const avatarY = 120;
+    const avatarSize = 100;
+
+    ctx.save();
     ctx.beginPath();
-    ctx.arc(1000, 100, 200, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(0, 255, 163, 0.05)';
-    ctx.fill();
+    ctx.arc(avatarX, avatarY, avatarSize, 0, Math.PI * 2);
+    ctx.clip();
+
+    if (avatar && typeof avatar === 'string' && avatar.startsWith('http')) {
+      try {
+        const userImg = await loadImage(avatar);
+        ctx.drawImage(userImg, avatarX - avatarSize, avatarY - avatarSize, avatarSize * 2, avatarSize * 2);
+      } catch (e) {
+        drawDefaultAvatar(ctx, avatarX, avatarY, avatarSize, wallet);
+      }
+    } else {
+      drawDefaultAvatar(ctx, avatarX, avatarY, avatarSize, wallet);
+    }
+    ctx.restore();
+
+    // Border for Avatar
+    ctx.beginPath();
+    ctx.arc(avatarX, avatarY, avatarSize, 0, Math.PI * 2);
+    ctx.strokeStyle = '#00ffa)3';
+    ctx.lineWidth = 5;
+    ctx.stroke();
 
     // Brand Header
     ctx.fillStyle = '#00ffa3';
     ctx.font = 'bold 40px Arial';
+    ctx.textAlign = 'left';
     ctx.fillText('DERIVERSE', 60, 80);
     
     ctx.fillStyle = '#ffffff';
     ctx.font = '24px Arial';
     ctx.fillText('TRADING ANALYTICS', 300, 78);
 
+    // ... rest of stats drawing ...
     // Wallet Address (Truncated)
     const truncatedWallet = `${wallet.slice(0, 6)}...${wallet.slice(-4)}`;
     ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
@@ -66,17 +91,18 @@ app.get('/api/share/:wallet', async (req: Request, res: Response) => {
 
     // Win Rate Box
     ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
-    ctx.roundRect(800, 200, 300, 250, 20);
+    ctx.beginPath();
+    ctx.roundRect(800, 250, 300, 250, 20);
     ctx.fill();
 
     ctx.fillStyle = '#00ffa3';
     ctx.font = 'bold 70px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText(`${winRate}%`, 950, 330);
+    ctx.fillText(`${winRate}%`, 950, 380);
     
     ctx.fillStyle = '#ffffff';
     ctx.font = '24px Arial';
-    ctx.fillText('WIN RATE', 950, 370);
+    ctx.fillText('WIN RATE', 950, 420);
 
     // Footer
     ctx.textAlign = 'left';
@@ -92,6 +118,22 @@ app.get('/api/share/:wallet', async (req: Request, res: Response) => {
     res.status(500).send('Generation failed');
   }
 });
+
+function drawDefaultAvatar(ctx: any, x: number, y: number, size: number, wallet: string) {
+  // Artistic default circle
+  const grad = ctx.createRadialGradient(x, y, 0, x, y, size);
+  grad.addColorStop(0, '#00ffa3');
+  grad.addColorStop(1, '#00a372');
+  ctx.fillStyle = grad;
+  ctx.fillRect(x - size, y - size, size * 2, size * 2);
+
+  // Initial from wallet
+  ctx.fillStyle = '#0a0b10';
+  ctx.font = `bold ${size}px Arial`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(wallet.charAt(0).toUpperCase(), x, y);
+}
 
 app.listen(PORT, () => {
   console.log(`Deriverse Analytics Backend running on port ${PORT}`);

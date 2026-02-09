@@ -50,11 +50,6 @@ npm run start
 
 ---
 
-## 🏆 Competition Checklist
-- [x] **Deriverse SDK**: Integrated using `@deriverse/kit`.
-- [x] **Real Wallet**: Fully functional Solana wallet adapter.
-- [x] **Backend**: Hybrid setup (On-Chain Journal + Social Sharing API).
-- [x] **Premium UI**: Glassmorphism design with responsive charts.
-- [x] **Clean Build**: 0 Lint errors, 0 Type errors.
+
 
 Built for the Deriverse Bounty. 🚀

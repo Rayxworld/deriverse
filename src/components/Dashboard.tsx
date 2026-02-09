@@ -22,6 +22,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar, Cell, PieChart as RePieChart, Pie
 } from 'recharts';
 import { format } from 'date-fns';
+import { generateSocialCard } from '../utils/socialCard';
 
 const NewbieExplainer = () => (
   <div className="glass-card" style={{ marginBottom: '24px', borderLeft: '4px solid var(--brand-primary)', background: 'linear-gradient(90deg, rgba(0, 255, 163, 0.05) 0%, transparent 100%)' }}>
@@ -112,26 +113,44 @@ const Dashboard: React.FC = () => {
     document.body.removeChild(link);
   };
 
-  const sharePerformance = () => {
-    if (!walletAddress) return;
-    let backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
-    
-    if (!backendUrl.startsWith('http')) {
-      backendUrl = `https://${backendUrl}`;
+  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setAvatarUrl(url);
     }
-    
-    const params = new URLSearchParams({
-      winRate: stats.winRate.toFixed(1),
-      totalPnL: stats.totalPnL.toFixed(2),
-      trades: trades.length.toString(),
-    });
+  };
 
-    if (avatarUrl) {
-      params.append('avatar', avatarUrl);
-    }
+  const sharePerformance = async () => {
+    if (!walletAddress) return;
     
-    const shareUrl = `${backendUrl}/api/share/${walletAddress}?${params.toString()}`;
-    window.open(shareUrl, '_blank');
+    try {
+      const dataUrl = await generateSocialCard({
+        winRate: stats.winRate.toFixed(1),
+        totalPnL: stats.totalPnL.toFixed(2),
+        trades: trades.length.toString(),
+        wallet: walletAddress,
+        avatarUrl: avatarUrl || undefined
+      });
+
+      // Create a temporary link to open/download the image
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = `deriverse_performance_${walletAddress.slice(0, 6)}.png`;
+      
+      // For web, usually opening in a new tab is better for "sharing"
+      const newTab = window.open();
+      if (newTab) {
+        newTab.document.write(`<img src="${dataUrl}" style="max-width: 100%; height: auto;" />`);
+        newTab.document.title = "Deriverse Performance Card";
+      } else {
+        // Fallback to download if popup blocked
+        link.click();
+      }
+    } catch (error) {
+      console.error('Failed to generate social card:', error);
+      alert('Could not generate sharing card. Please try again.');
+    }
   };
 
   if (loading) {
@@ -159,24 +178,35 @@ const Dashboard: React.FC = () => {
         <div className="header-actions" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
           {!isDemo && walletAddress && (
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <input 
-                type="text" 
-                placeholder="Avatar URL..." 
-                value={avatarUrl}
-                onChange={(e) => setAvatarUrl(e.target.value)}
-                style={{ 
-                  background: 'var(--bg-secondary)', 
-                  border: '1px solid var(--border)', 
-                  color: 'var(--text-primary)', 
-                  padding: '8px 12px', 
-                  borderRadius: '10px', 
-                  fontSize: '0.8125rem',
-                  width: '120px'
-                }} 
-              />
+              <div style={{ position: 'relative' }}>
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  onChange={handleAvatarUpload}
+                  id="avatar-upload"
+                  style={{ display: 'none' }}
+                />
+                <label 
+                  htmlFor="avatar-upload"
+                  style={{ 
+                    background: 'var(--bg-secondary)', 
+                    border: '1px solid var(--border)', 
+                    color: 'var(--text-secondary)', 
+                    padding: '8px 12px', 
+                    borderRadius: '10px', 
+                    fontSize: '0.8125rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  <BookOpen size={14} /> {avatarUrl ? 'Change Pic' : 'Upload Pic'}
+                </label>
+              </div>
               <button 
                 onClick={sharePerformance}
-                className="glass-card" 
+               className="glass-card" 
                 style={{ 
                   padding: '8px 16px', 
                   display: 'flex', 

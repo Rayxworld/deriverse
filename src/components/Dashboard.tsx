@@ -51,6 +51,7 @@ const NewbieExplainer = () => (
 
 const Dashboard: React.FC = () => {
   const { trades, loading, isDemo, setIsDemo, walletAddress } = useTradingData();
+  const [avatarUrl, setAvatarUrl] = useState('');
   const [assetFilter, setAssetFilter] = useState('');
   
   const filteredTrades = useMemo(() => {
@@ -115,12 +116,21 @@ const Dashboard: React.FC = () => {
     if (!walletAddress) return;
     let backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
     
-    // Ensure the URL is absolute by adding https:// if protocol is missing
     if (!backendUrl.startsWith('http')) {
       backendUrl = `https://${backendUrl}`;
     }
     
-    const shareUrl = `${backendUrl}/api/share/${walletAddress}?winRate=${stats.winRate.toFixed(1)}&totalPnL=${stats.totalPnL.toFixed(2)}&trades=${trades.length}`;
+    const params = new URLSearchParams({
+      winRate: stats.winRate.toFixed(1),
+      totalPnL: stats.totalPnL.toFixed(2),
+      trades: trades.length.toString(),
+    });
+
+    if (avatarUrl) {
+      params.append('avatar', avatarUrl);
+    }
+    
+    const shareUrl = `${backendUrl}/api/share/${walletAddress}?${params.toString()}`;
     window.open(shareUrl, '_blank');
   };
 
@@ -148,24 +158,41 @@ const Dashboard: React.FC = () => {
         </div>
         <div className="header-actions" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
           {!isDemo && walletAddress && (
-            <button 
-              onClick={sharePerformance}
-              className="glass-card" 
-              style={{ 
-                padding: '8px 16px', 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '8px', 
-                cursor: 'pointer',
-                backgroundColor: 'rgba(0, 255, 163, 0.1)',
-                border: '1px solid var(--brand-primary)',
-                color: 'var(--brand-primary)',
-                fontWeight: '600',
-                fontSize: '0.8125rem'
-              }}
-            >
-              <Share2 size={14} /> Share Results
-            </button>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <input 
+                type="text" 
+                placeholder="Avatar URL..." 
+                value={avatarUrl}
+                onChange={(e) => setAvatarUrl(e.target.value)}
+                style={{ 
+                  background: 'var(--bg-secondary)', 
+                  border: '1px solid var(--border)', 
+                  color: 'var(--text-primary)', 
+                  padding: '8px 12px', 
+                  borderRadius: '10px', 
+                  fontSize: '0.8125rem',
+                  width: '120px'
+                }} 
+              />
+              <button 
+                onClick={sharePerformance}
+                className="glass-card" 
+                style={{ 
+                  padding: '8px 16px', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '8px', 
+                  cursor: 'pointer',
+                  backgroundColor: 'rgba(0, 255, 163, 0.1)',
+                  border: '1px solid var(--brand-primary)',
+                  color: 'var(--brand-primary)',
+                  fontWeight: '600',
+                  fontSize: '0.8125rem'
+                }}
+              >
+                <Share2 size={14} /> Share Results
+              </button>
+            </div>
           )}
           <div style={{ display: 'flex', background: 'var(--bg-secondary)', padding: '4px', borderRadius: '12px', gap: '4px' }}>
             <button 

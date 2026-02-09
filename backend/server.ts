@@ -13,8 +13,11 @@ const PORT = process.env.PORT || 3001;
 
 // Endpoint to generate a performance card image
 app.get('/api/share/:wallet', async (req: Request, res: Response) => {
-  const { wallet } = req.params;
-  const { winRate, totalPnL, trades, avatar } = req.query;
+  const wallet = req.params.wallet as string;
+  const winRate = (req.query.winRate as string) || '0';
+  const totalPnL = (req.query.totalPnL as string) || '0';
+  const trades = (req.query.trades as string) || '0';
+  const avatar = req.query.avatar as string | undefined;
 
   try {
     const width = 1200;
@@ -39,7 +42,7 @@ app.get('/api/share/:wallet', async (req: Request, res: Response) => {
     ctx.arc(avatarX, avatarY, avatarSize, 0, Math.PI * 2);
     ctx.clip();
 
-    if (avatar && typeof avatar === 'string' && avatar.startsWith('http')) {
+    if (avatar && avatar.startsWith('http')) {
       try {
         const userImg = await loadImage(avatar);
         ctx.drawImage(userImg, avatarX - avatarSize, avatarY - avatarSize, avatarSize * 2, avatarSize * 2);
@@ -54,7 +57,7 @@ app.get('/api/share/:wallet', async (req: Request, res: Response) => {
     // Border for Avatar
     ctx.beginPath();
     ctx.arc(avatarX, avatarY, avatarSize, 0, Math.PI * 2);
-    ctx.strokeStyle = '#00ffa)3';
+    ctx.strokeStyle = '#00ffa3';
     ctx.lineWidth = 5;
     ctx.stroke();
 
